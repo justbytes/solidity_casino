@@ -13,7 +13,7 @@ import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/autom
  */
 contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     // Custom errors
-    error Raffle__NotEnoughEth();
+    error Raffle__NotEnoughEthSent();
     error Raffle__NotEnoughTimePassed();
     error Raffle__FailedToSendEthToWinner();
     error Raffle__RaffleNotOpen();
@@ -75,7 +75,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     function enterRaffle() external payable {
         // Revert if not enough funds where sent with the transaction
         if (msg.value < i_entranceFee) {
-            revert Raffle__NotEnoughEth();
+            revert Raffle__NotEnoughEthSent();
         } else if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__RaffleNotOpen();
         }
@@ -170,5 +170,13 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
 
     function getRecentWinner() external view returns (address) {
         return s_recentWinner;
+    }
+
+    function getRaffleState() external view returns (RaffleState) {
+        return s_raffleState;
+    }
+
+    function getRafflers(uint256 index) external view returns (address) {
+        return s_rafflers[index];
     }
 }
