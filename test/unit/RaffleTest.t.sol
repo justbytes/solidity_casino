@@ -6,6 +6,10 @@ import {Raffle} from "../../src/Raffle.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 
 contract RaffleTest is Test {
+    // Events
+    event RaffleEntered(address indexed raffler);
+    event WinnerPicked(address indexed winner);
+
     // State variables
     Raffle public raffle;
     HelperConfig public helperConfig;
@@ -15,8 +19,9 @@ contract RaffleTest is Test {
     uint256 interval;
     address vrfCoordinator;
     bytes32 gasLane;
-    uint64 subscriptionId;
+    uint256 subscriptionId;
     uint32 callbackGasLimit;
+    address link;
 
     // Mock users
     address public RAFFLER = makeAddr("raffler");
@@ -37,7 +42,7 @@ contract RaffleTest is Test {
         gasLane = config.gasLane;
         subscriptionId = config.subscriptionId;
         callbackGasLimit = config.callbackGasLimit;
-
+        link = config.link;
         vm.deal(RAFFLER, STARTING_USER_BALANCE);
     }
 
@@ -58,5 +63,30 @@ contract RaffleTest is Test {
         vm.prank(RAFFLER);
         raffle.enterRaffle{value: entranceFee}();
         assertEq(raffle.getRafflers(0), RAFFLER);
+    }
+
+    function testEnteringRaffleEmitsEvent() public {
+        vm.prank(RAFFLER);
+
+        vm.expectEmit(true, false, false, true, address(raffle));
+        emit RaffleEntered(RAFFLER);
+
+        raffle.enterRaffle{value: entranceFee}();
+    }
+
+    function testDontAllowRafflersToEnterWhenRaffleIsCalculating() public {
+        // Arrange test conditions
+        vm.prank(RAFFLER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1); // Move time forward by the interval + 1
+        vm.roll(block.number + 1); // Simulate adding a new block
+
+        // Act
+        raffle.performUpkeep("");
+
+        // Assert
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
+        vm.prank(RAFFLER);
+        raffle.enterRaffle{value: entranceFee}();
     }
 }

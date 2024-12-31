@@ -34,6 +34,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     bytes32 private immutable i_keyHash;
     uint256 private immutable i_subscriptionId;
     uint32 private immutable i_callbackGasLimit;
+    address private immutable i_link;
     address payable[] private s_rafflers;
     uint256 private s_lastTimestamp;
     address payable private s_recentWinner;
@@ -57,8 +58,9 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         uint256 interval,
         address vrfCoordinator,
         bytes32 gasLane,
-        uint64 subscriptionId,
-        uint32 callbackGasLimit
+        uint256 subscriptionId,
+        uint32 callbackGasLimit,
+        address link
     ) VRFConsumerBaseV2Plus(vrfCoordinator) AutomationCompatibleInterface() {
         i_entranceFee = entranceFee;
         i_interval = interval;
@@ -67,6 +69,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
         s_raffleState = RaffleState.OPEN;
+        i_link = link;
     }
 
     /**
@@ -76,7 +79,10 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         // Revert if not enough funds where sent with the transaction
         if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughEthSent();
-        } else if (s_raffleState != RaffleState.OPEN) {
+        }
+
+        // Revert if the raffle is not open
+        if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__RaffleNotOpen();
         }
 

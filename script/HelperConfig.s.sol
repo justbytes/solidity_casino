@@ -2,12 +2,13 @@ pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
-
+import {LinkToken} from "../test/mocks/LinkToken.sol";
 /**
  * @title Constants
  * @notice Constants for the HelperConfig contract
  * @dev This contract contains all of the constant variables for the HelperConfig contract
  */
+
 abstract contract Constants {
     // VRF Mock Values
     uint96 public constant MOCK_BASE_FEE = 0.25 ether;
@@ -38,19 +39,20 @@ contract HelperConfig is Script, Constants {
         uint256 interval;
         address vrfCoordinator;
         bytes32 gasLane;
-        uint64 subscriptionId;
+        uint256 subscriptionId;
         uint32 callbackGasLimit;
+        address link;
     }
 
     // State variables
     NetworkConfig public localNetworkConfig;
-    mapping(uint256 => NetworkConfig) public networkConfig;
+    mapping(uint256 => NetworkConfig) public networkConfigs;
 
     /**
      * @notice Constructor for the HelperConfig contract
      */
     constructor() {
-        networkConfig[SEPOLIA_CHAIN_ID] = getSepoliaEthConfig();
+        networkConfigs[SEPOLIA_CHAIN_ID] = getSepoliaEthConfig();
     }
 
     /**
@@ -61,13 +63,17 @@ contract HelperConfig is Script, Constants {
         return getConfigByChainId(block.chainid);
     }
 
+    function setConfig(uint256 chainId, NetworkConfig memory networkConfig) public {
+        networkConfigs[chainId] = networkConfig;
+    }
+
     /**
      * @notice Get the configuration for the current network
      * @param chainId The chain ID of the current network
      * @return The configuration for the current network
      */
     function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
-        if (networkConfig[chainId].vrfCoordinator != address(0)) {
+        if (networkConfigs[chainId].vrfCoordinator != address(0)) {
             return getSepoliaEthConfig();
         } else if (chainId == ANVIL_CHAIN_ID) {
             return getAnvilConfig();
@@ -87,7 +93,8 @@ contract HelperConfig is Script, Constants {
             vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             subscriptionId: 0,
-            callbackGasLimit: 500000
+            callbackGasLimit: 500000,
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
         });
     }
 
@@ -105,7 +112,7 @@ contract HelperConfig is Script, Constants {
 
         VRFCoordinatorV2_5Mock vrfCoordinatorMock =
             new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE, MOCK_LINK_USD_PRICE);
-
+        LinkToken linkToken = new LinkToken();
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
@@ -114,7 +121,8 @@ contract HelperConfig is Script, Constants {
             vrfCoordinator: address(vrfCoordinatorMock),
             gasLane: bytes32(0),
             subscriptionId: 0,
-            callbackGasLimit: 500000
+            callbackGasLimit: 500000,
+            link: address(linkToken)
         });
 
         return localNetworkConfig;
