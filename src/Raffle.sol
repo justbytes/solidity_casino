@@ -43,6 +43,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     // Events
     event RaffleEntered(address indexed raffler);
     event WinnerPicked(address indexed winner);
+    event RequestedRaffleWinner(uint256 indexed requestId);
 
     /**
      * @notice Constructor for the Raffle contract implements Chainlink VRFv2.5 constructor
@@ -142,7 +143,10 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         });
 
         // Request the random number with the request as parameters
-        s_vrfCoordinator.requestRandomWords(request);
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+
+        // Emit the request id
+        emit RequestedRaffleWinner(requestId);
     }
 
     function fulfillRandomWords(uint256, /* requestId */ uint256[] calldata randomWords) internal override {
