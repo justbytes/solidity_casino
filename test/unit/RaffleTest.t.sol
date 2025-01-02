@@ -58,13 +58,14 @@ contract RaffleTest is Test, Constants {
         vm.deal(RAFFLER, STARTING_USER_BALANCE);
     }
 
-    function test_RaffleIsInitializedInOpenState() public view {
+    function testRaffleIsInitializedInOpenState() public view {
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
     }
 
     /*//////////////////////////////////////////////////////////////
                               ENTER RAFFLE
     //////////////////////////////////////////////////////////////*/
+
     function testRaffleRevertsWhenYouDontPayEnough() public {
         vm.prank(RAFFLER);
         vm.expectRevert(Raffle.Raffle__NotEnoughEthSent.selector);
