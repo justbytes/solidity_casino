@@ -197,12 +197,4 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     function getInterval() external view returns (uint256) {
         return i_interval;
     }
-
-    function getSubscriptionId() external view returns (uint256) {
-        return i_subscriptionId;
-    }
-
-    function getVrfCoordinator() external view returns (address) {
-        return address(s_vrfCoordinator);
-    }
 }
